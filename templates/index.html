@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature and Humidity Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <style>
+        .chart-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+        .control-panel {
+            text-align: center;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .switch-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .switch-btn.on {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .switch-btn.off {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Temperature and Humidity Data</h1>
+    
+    <div class="control-panel">
+        <button id="lightSwitch" class="switch-btn off">Light: OFF</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="temperatureChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="humidityChart"></canvas>
+    </div>
+
+    <script>
+        // Initialize Socket.IO with explicit configuration
+        const socket = io({
+            transports: ['websocket'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000
+        });
+
+        // Socket.IO connection handling
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+        });
+
+        // Light switch functionality
+        const lightSwitch = document.getElementById('lightSwitch');
+        let lightState = 'off';
+
+        lightSwitch.addEventListener('click', () => {
+            lightState = lightState === 'off' ? 'on' : 'off';
+            socket.emit('toggle_light', { state: lightState });
+        });
+
+        socket.on('light_state', (data) => {
+            lightState = data.state;
+            lightSwitch.textContent = `Light: ${lightState.toUpperCase()}`;
+            lightSwitch.className = `switch-btn ${lightState}`;
+        });
+
+        // Chart configuration
+        const createChart = (canvasId, label, color) => {
+            return new Chart(document.getElementById(canvasId), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: label,
+                        borderColor: color,
+                        backgroundColor: color.replace(')', ', 0.1)'),
+                        fill: true,
+                        data: [],
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Time (last 50 readings)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 500
+                    }
+                }
+            });
+        };
+
+        // Initialize charts
+        const temperatureChart = createChart(
+            'temperatureChart',
+            'Temperature (°C)',
+            'rgb(255, 99, 132)'
+        );
+
+        const humidityChart = createChart(
+            'humidityChart',
+            'Humidity (%)',
+            'rgb(54, 162, 235)'
+        );
+
+        // Update function for both charts
+        const updateCharts = (data) => {
+            console.log('Received data update:', data);
+
+            if (data.temperature && Array.isArray(data.temperature)) {
+                temperatureChart.data.labels = Array.from(
+                    { length: data.temperature.length },
+                    (_, i) => i
+                );
+                temperatureChart.data.datasets[0].data = data.temperature;
+                temperatureChart.update('none');
+            }
+
+            if (data.humidity && Array.isArray(data.humidity)) {
+                humidityChart.data.labels = Array.from(
+                    { length: data.humidity.length },
+                    (_, i) => i
+                );
+                humidityChart.data.datasets[0].data = data.humidity;
+                humidityChart.update('none');
+            }
+        };
+
+        // Listen for data updates
+        socket.on('update_data', updateCharts);
+    </script>
+</body>
+</html>
