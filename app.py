@@ -1,5 +1,6 @@
 # app.py
 from flask import Flask, render_template
+from flask_basicauth import BasicAuth
 from flask_socketio import SocketIO, emit
 import paho.mqtt.client as mqtt
 import json
@@ -18,8 +19,11 @@ LIGHT_SWITCH_TOPIC = "light_switch"
 
 # Flask Configuration
 app = Flask(__name__)
+app.config['BASIC_AUTH_USERNAME'] = 'YOUR_USERNAME'
+app.config['BASIC_AUTH_PASSWORD'] = 'YOUR_VERY_SECURE_PASSWORD'
 app.config['SECRET_KEY'] = 'mysecret'
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+basic_auth = BasicAuth(app)
 
 # MQTT Data
 temperature_data = []
@@ -109,6 +113,7 @@ def handle_light_toggle(data):
 
 # Flask Route
 @app.route('/')
+@basic_auth.required
 def index():
     return render_template('index.html')
 
