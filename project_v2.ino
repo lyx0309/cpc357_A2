@@ -7,7 +7,7 @@
 #define DHTTYPE DHT11
 const char * WIFI_SSID = "Redmi Note 9S"; // Your WiFi SSID
 const char * WIFI_PASSWORD = "47472147eadf"; // Your WiFi password
-const char * MQTT_SERVER = "34.172.246.156"; // Your VM instance public IP address
+const char * MQTT_SERVER = "12.34.56.78"; // Your VM instance public IP address
 const char * MQTT_TOPIC = "iot"; // MQTT topic for subscription
 const int MQTT_PORT = 1883; // Non-TLS communication port
 const int dht11Pin = 21; // DHT11 sensor pin
@@ -87,7 +87,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void reconnect() {
   while (!client.connected()) {
     Serial.println("Attempting MQTT connection...");
-    if (client.connect("ESP32Client")) {
+    if (client.connect("ESP32Client", "your_broker_username", "your_broker_pass")) {
       Serial.println("Connected to MQTT server");
       client.subscribe("light_switch");
     } else {
