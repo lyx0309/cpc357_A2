@@ -63,7 +63,7 @@ def on_message(client, userdata, msg):
             if len(humidity_data) > 50:
                 humidity_data = humidity_data[-50:]
         
-        emit('update_data', 
+        socketio.emit('update_data', 
              {'temperature': temperature_data, 
               'humidity': humidity_data})
         logger.debug("Data emitted via Socket.IO")
@@ -107,7 +107,7 @@ def mqtt_thread():
 def handle_connect():
     logger.info("Client connected")
     with data_lock:
-        emit('update_data', {
+        socketio.emit('update_data', {
             'temperature': temperature_data,
             'humidity': humidity_data
         })
@@ -148,4 +148,4 @@ if __name__ == '__main__':
     mqtt_thread.start()
     
     # Run Flask-SocketIO
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True, use_reloader=True)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=True)
