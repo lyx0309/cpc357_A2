@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # MQTT Configuration
 MQTT_BROKER = os.getenv("MQTT_BROKER")
-MQTT_PORT = int(os.getenv("MQTT"))
+MQTT_PORT = int(os.getenv("MQTT_PORT"))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC")
 LIGHT_SWITCH_TOPIC = os.getenv("LIGHT_SWITCH_TOPIC")
 
@@ -23,7 +23,7 @@ LIGHT_SWITCH_TOPIC = os.getenv("LIGHT_SWITCH_TOPIC")
 app = Flask(__name__)
 app.config['BASIC_AUTH_USERNAME'] = os.getenv("BASIC_AUTH_USERNAME")
 app.config['BASIC_AUTH_PASSWORD'] = os.getenv("BASIC_AUTH_PASSWORD")
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+app.config['SECRET_KEY`'] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 basic_auth = BasicAuth(app)
 
