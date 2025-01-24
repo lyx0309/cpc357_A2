@@ -68,10 +68,11 @@ def on_message(client, userdata, msg):
               'humidity': humidity_data})
         logger.debug("Data emitted via Socket.IO")
         
-        # Insert data into the database
-        db = get_db()
-        db.execute("INSERT INTO sensor_data (temperature, humidity) VALUES (?, ?)", (temperature, humidity))
-        db.commit()
+        # Insert data into the database within the app context
+        with app.app_context():
+            db = get_db()
+            db.execute("INSERT INTO sensor_data (temperature, humidity) VALUES (?, ?)", (temperature, humidity))
+            db.commit()
         
     except Exception as e:
         logger.error(f"Error processing MQTT message: {e}")
