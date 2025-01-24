@@ -22,6 +22,8 @@ MQTT_BROKER = os.getenv("MQTT_BROKER")
 MQTT_PORT = int(os.getenv("MQTT_PORT"))
 MQTT_TOPIC = os.getenv("MQTT_TOPIC")
 LIGHT_SWITCH_TOPIC = os.getenv("LIGHT_SWITCH_TOPIC")
+BROKER_USERNAME = os.getenv("BROKER_USERNAME")
+BROKER_PASS = os.getenv("BROKER_PASS")
 
 # Flask Configuration
 app = Flask(__name__)
@@ -48,6 +50,7 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     global temperature_data, humidity_data
     try:
+        print(msg.topic + " " + str(msg.payload))
         data = json.loads(msg.payload.decode())
         logger.debug(f"Received MQTT message: {data}")
         
@@ -58,10 +61,10 @@ def on_message(client, userdata, msg):
             temperature_data.append(temperature)
             humidity_data.append(humidity)
             
-            if len(temperature_data) > 50:
-                temperature_data = temperature_data[-50:]
-            if len(humidity_data) > 50:
-                humidity_data = humidity_data[-50:]
+            if len(temperature_data) > 30:
+                temperature_data = temperature_data[-30:]
+            if len(humidity_data) > 30:
+                humidity_data = humidity_data[-30:]
         
         socketio.emit('update_data', 
              {'temperature': temperature_data, 
@@ -83,6 +86,8 @@ def setup_mqtt_client():
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+
+        client.username_pw_set(os.getenv("BROKER_USERNAME"), os.getenv("BROKER_PASS"))
         
         def on_connect_fail(client, userdata):
             logger.error("Failed to connect to MQTT broker")
@@ -105,6 +110,7 @@ def mqtt_thread():
 # Socket.IO event handlers
 @socketio.on('connect')
 def handle_connect(auth):
+    global temperature_data, humidity_data
     logger.info("Client connected")
     with data_lock:
         # Emit real-time data
@@ -116,9 +122,12 @@ def handle_connect(auth):
     # Emit historical data from the database
     with app.app_context():
         db = get_db()
-        sensor_data = query_db("SELECT temperature, humidity FROM sensor_data ORDER BY timestamp DESC LIMIT 50")
+        sensor_data = query_db("SELECT temperature, humidity FROM sensor_data ORDER BY timestamp DESC LIMIT 30")
         historical_temperature = [row[0] for row in sensor_data]
         historical_humidity = [row[1] for row in sensor_data]
+        temperature_data = historical_temperature[:30]
+        humidity_data = historical_humidity[:30]
+        # print(historical_temperature[:30])
         
         socketio.emit('historical_data', {
             'temperature': historical_temperature,
@@ -152,7 +161,7 @@ def index():
 @basic_auth.required
 def data():
     db = get_db()
-    sensor_data = query_db("SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT 50")
+    sensor_data = query_db("SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT 30")
     return render_template('data.html', sensor_data=sensor_data)
 
 if __name__ == '__main__':

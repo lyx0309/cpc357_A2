@@ -8,7 +8,7 @@
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <style>
         .chart-container {
-            width: 80%;
+            width: 40%;
             margin: 20px auto;
         }
         .control-panel {
@@ -90,8 +90,8 @@
                     datasets: [{
                         label: label,
                         borderColor: color,
-                        backgroundColor: color.replace(')', ', 0.1)'),
-                        fill: true,
+                        // backgroundColor: color.replace(')', ', 0.1)'),
+                        fill: false,
                         data: [],
                         tension: 0.4
                     }]
