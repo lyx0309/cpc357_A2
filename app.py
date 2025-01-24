@@ -4,24 +4,26 @@ from flask_basicauth import BasicAuth
 from flask_socketio import SocketIO, emit
 import paho.mqtt.client as mqtt
 import json
+import os
 import threading
 import logging
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # MQTT Configuration
-MQTT_BROKER = "34.172.246.156"
-MQTT_PORT = 1883
-MQTT_TOPIC = "iot"
-LIGHT_SWITCH_TOPIC = "light_switch"
+MQTT_BROKER = os.getenv("MQTT_BROKER")
+MQTT_PORT = int(os.getenv("MQTT"))
+MQTT_TOPIC = os.getenv("MQTT_TOPIC")
+LIGHT_SWITCH_TOPIC = os.getenv("LIGHT_SWITCH_TOPIC")
 
 # Flask Configuration
 app = Flask(__name__)
-app.config['BASIC_AUTH_USERNAME'] = 'YOUR_USERNAME'
-app.config['BASIC_AUTH_PASSWORD'] = 'YOUR_VERY_SECURE_PASSWORD'
-app.config['SECRET_KEY'] = 'mysecret'
+app.config['BASIC_AUTH_USERNAME'] = os.getenv("BASIC_AUTH_USERNAME")
+app.config['BASIC_AUTH_PASSWORD'] = os.getenv("BASIC_AUTH_PASSWORD")
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 basic_auth = BasicAuth(app)
 
