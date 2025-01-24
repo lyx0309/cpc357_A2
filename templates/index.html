@@ -157,6 +157,9 @@
 
         // Listen for data updates
         socket.on('update_data', updateCharts);
+
+        // Listen for historical data
+        socket.on('historical_data', updateCharts);
     </script>
 </body>
 </html>

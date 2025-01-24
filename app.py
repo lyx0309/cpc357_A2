@@ -104,12 +104,25 @@ def mqtt_thread():
 
 # Socket.IO event handlers
 @socketio.on('connect')
-def handle_connect():
+def handle_connect(auth):
     logger.info("Client connected")
     with data_lock:
+        # Emit real-time data
         socketio.emit('update_data', {
             'temperature': temperature_data,
             'humidity': humidity_data
+        })
+    
+    # Emit historical data from the database
+    with app.app_context():
+        db = get_db()
+        sensor_data = query_db("SELECT temperature, humidity FROM sensor_data ORDER BY timestamp DESC LIMIT 50")
+        historical_temperature = [row[0] for row in sensor_data]
+        historical_humidity = [row[1] for row in sensor_data]
+        
+        socketio.emit('historical_data', {
+            'temperature': historical_temperature,
+            'humidity': historical_humidity
         })
 
 @socketio.on('disconnect')
