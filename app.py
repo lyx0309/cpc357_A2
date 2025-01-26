@@ -204,4 +204,4 @@ if __name__ == '__main__':
     mqtt_thread.start()
     
     # Run Flask-SocketIO
-    socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=True)
+    socketio.run(app, host='0.0.0.0', port=80, debug=False, use_reloader=True)
