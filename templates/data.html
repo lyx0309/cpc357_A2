@@ -2,29 +2,238 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sensor Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            color: #495057;
+        }
+
+        .table-container {
+            width: 90%;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #343a40;
+            color: white;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        th {
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .control-panel {
+            text-align: center;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+        }
+
+        footer {
+            text-align: center;
+            margin: 20px 0;
+            color: #868e96;
+        }
+
+        /* Style the container for the dropdown */
+        label {
+            font-size: 16px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Style the select element */
+        #dateRange, #limit {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            width: 220px;
+        }
+
+        /* Style for the dropdown options */
+        #dateRange option, #limit option {
+            padding: 10px;
+            background-color: #fff;
+            font-size: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* Style the select on focus */
+        #dateRange:focus, #limit:focus {
+            border-color: #007bff;
+            background-color: #e9f3ff;
+            outline: none;
+        }
+
+        /* Add hover effect for options */
+        #dateRange option:hover, #limit option:hover {
+            background-color: #e9e9e9;
+        }
+
+        /* Optional: Style for selected option */
+        #dateRange option:checked, #limit option:checked {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #applyBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #applyBtn:hover {
+            background-color: #0056b3;
+        }
+
+        .navigate-btn{
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            background-color: #466fea;
+            color: white;
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translate(0, -50%);
+        }
+
+        .navigate-btn:hover{
+            transform: translate(0, -50%) scale(1.05);
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Sensor Data</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Timestamp</th>
-                <th>Temperature</th>
-                <th>Humidity</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in sensor_data %}
-            <tr>
-                <td>{{ row[0] }}</td>
-                <td>{{ row[1] }}</td>
-                <td>{{ row[2] }}</td>
-                <td>{{ row[3] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="position: relative;">
+        <h1>Sensor Data</h1>
+        <button class="navigate-btn" onclick="location.href='/'">View Chart</button>
+    </div>
+    
+
+    <div class="control-panel">
+        <label for="dateRange">Date Range:</label>
+        <select id="dateRange">
+            <option  value="lasthour">Last Hour</option>
+            <option value="today">Today</option>
+            <option value="7days">Past 7 Days</option>
+            <option value="30days">Past 30 Days</option>
+        </select>
+        <div style="width: 20px; display: inline-block;"></div>
+
+        <label for="limit">Limit:</label>
+        <select id="limit">
+            <option  value="30">30</option>
+            <option value="60">60</option>
+            <option value="90">90</option>
+            <option value="all">All</option>
+        </select>
+        <div style="width: 20px; display: inline-block;"></div>
+        <button id="applyBtn">Apply</button>
+    </div>
+
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in sensor_data %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>        
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Sensor Data Dashboard</p>
+    </footer>
+
+    <script>
+        document.getElementById('applyBtn').addEventListener('click', () => {
+        const selectedRange = document.getElementById('dateRange').value;
+        const limit = document.getElementById('limit').value;
+
+
+        fetch('/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ range: selectedRange, limit: limit }),
+        })
+        .then(response => response.text())
+        .then(html => {
+            document.querySelector('.table-container').innerHTML = html;
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    </script>
 </body>
 </html>

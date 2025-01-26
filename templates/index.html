@@ -3,50 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temperature and Humidity Graph</title>
+    <title>Temperature and Humidity Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <style>
-        .chart-container {
-            width: 40%;
-            margin: 20px auto;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
         }
-        .control-panel {
-            text-align: center;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .switch-btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        .switch-btn.on {
+
+        header {
             background-color: #4CAF50;
             color: white;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .switch-btn.off {
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .navigate-btn{
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            background-color: #466fea;
+            color: white;
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translate(0, -50%);
+        }
+
+        .navigate-btn:hover{
+            transform: translate(0, -50%) scale(1.05);
+        }
+
+        .switch-btn {
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
             background-color: #f44336;
             color: white;
+        }
+
+        .switch-btn.on {
+            background-color: #4CAF50;
+        }
+
+        .switch-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .charts {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .chart-container {
+            flex: 1;
+            min-width: 45%;
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            max-height: 400px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Temperature and Humidity Data</h1>
+    <div style="position: relative;">
+        <header>Temperature and Humidity Dashboard</header>
+        <div class="control-panel">
+        <button class="navigate-btn" onclick="location.href='/data'">View Data</button>
+    </div></div>
     
-    <div class="control-panel">
-        <button id="lightSwitch" class="switch-btn off">Light: OFF</button>
+
+    <div class="container">
+        <div class="control-panel">
+            <button id="lightSwitch" class="switch-btn off">Light: OFF</button>
+        </div>
+
+        <div class="charts">
+            <div class="chart-container">
+                <h3 style="text-align: center;">Temperature (°C)</h3>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="text-align: center;">Humidity (%)</h3>
+                <canvas id="humidityChart"></canvas>
+            </div>
+        </div>
     </div>
 
-    <div class="chart-container">
-        <canvas id="temperatureChart"></canvas>
-    </div>
-    <div class="chart-container">
-        <canvas id="humidityChart"></canvas>
-    </div>
+    <footer>
+        &copy; 2025 IoT Dashboard. All rights reserved.
+    </footer>
 
     <script>
         // Initialize Socket.IO with explicit configuration
@@ -82,7 +173,7 @@
         });
 
         // Chart configuration
-        const createChart = (canvasId, label, color) => {
+        const createChart = (canvasId, label, color, min, max) => {
             return new Chart(document.getElementById(canvasId), {
                 type: 'line',
                 data: {
@@ -90,7 +181,6 @@
                     datasets: [{
                         label: label,
                         borderColor: color,
-                        // backgroundColor: color.replace(')', ', 0.1)'),
                         fill: false,
                         data: [],
                         tension: 0.4
@@ -101,7 +191,9 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true, 
+                            min: min,
+                            max: max
                         },
                         x: {
                             type: 'linear',
@@ -123,13 +215,17 @@
         const temperatureChart = createChart(
             'temperatureChart',
             'Temperature (°C)',
-            'rgb(255, 99, 132)'
+            'rgb(255, 99, 132)',
+            20,
+            35
         );
 
         const humidityChart = createChart(
             'humidityChart',
             'Humidity (%)',
-            'rgb(54, 162, 235)'
+            'rgb(54, 162, 235)',
+            60,
+            80
         );
 
         // Update function for both charts
@@ -142,7 +238,16 @@
                     (_, i) => i
                 );
                 temperatureChart.data.datasets[0].data = data.temperature;
-                temperatureChart.update('none');
+
+                // Calculate min and max based on the latest data
+                const min = Math.min(...temperatureChart.data.datasets[0].data) - 2;
+                const max = Math.max(...temperatureChart.data.datasets[0].data) + 2;
+
+                // Update the y-axis scale dynamically
+                temperatureChart.options.scales.y.min = min;
+                temperatureChart.options.scales.y.max = max;
+
+                temperatureChart.update();
             }
 
             if (data.humidity && Array.isArray(data.humidity)) {
@@ -151,7 +256,16 @@
                     (_, i) => i
                 );
                 humidityChart.data.datasets[0].data = data.humidity;
-                humidityChart.update('none');
+
+                // Calculate min and max based on the latest data
+                const min = Math.min(...humidityChart.data.datasets[0].data) - 2;
+                const max = Math.max(...humidityChart.data.datasets[0].data) + 2;
+
+                // Update the y-axis scale dynamically
+                humidityChart.options.scales.y.min = min;
+                humidityChart.options.scales.y.max = max;
+
+                humidityChart.update();
             }
         };
 

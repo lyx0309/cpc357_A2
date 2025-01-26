@@ -9,6 +9,8 @@ import threading
 import logging
 from dotenv import load_dotenv
 from database import get_db, init_app, query_db
+from flask import request
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -157,12 +159,44 @@ def handle_light_toggle(data):
 def index():
     return render_template('index.html')
 
-@app.route('/data')
+@app.route('/data', methods=['GET', 'POST'])
 @basic_auth.required
 def data():
     db = get_db()
-    sensor_data = query_db("SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT 30")
-    return render_template('data.html', sensor_data=sensor_data)
+    
+    # Default query: Last 30 records
+    query = "SELECT * FROM sensor_data WHERE timestamp >= datetime('now', '-1 hour') ORDER BY timestamp DESC lIMIT 30"
+    params = ()
+
+    date_range = 'lasthour'
+
+    if request.method == 'POST':
+        # Get the selected range from the frontend
+        date_range = request.json.get('range')
+        limit = request.json.get('limit')
+
+        # Adjust the query based on the date range
+        if date_range == 'lasthour':
+            query = "SELECT * FROM sensor_data WHERE timestamp >= datetime('now', '-1 hour') ORDER BY timestamp DESC"
+        elif date_range == 'today':
+            query = "SELECT * FROM sensor_data WHERE DATE(timestamp) = DATE('now') ORDER BY timestamp DESC"
+        elif date_range == '7days':
+            query = "SELECT * FROM sensor_data WHERE timestamp >= datetime('now', '-7 days') ORDER BY timestamp DESC"
+        elif date_range == '30days':
+            query = "SELECT * FROM sensor_data WHERE timestamp >= datetime('now', '-30 days') ORDER BY timestamp DESC"
+
+        if limit not in ['30', '60', '90', 'all']:
+            limit = 30
+
+        if limit != 'all':
+            query += f" LIMIT {limit}"
+
+        sensor_data = query_db(query, params)
+        return render_template('table_container.html', sensor_data=sensor_data)
+
+    
+    sensor_data = query_db(query, params)
+    return render_template('data.html', sensor_data=sensor_data, range=date_range)
 
 if __name__ == '__main__':
     # Start MQTT thread
